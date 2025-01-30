@@ -1,0 +1,1 @@
+/home/lowlife/rust-linked-list/target/debug/librust_linked_list.rlib: /home/lowlife/rust-linked-list/src/fifth.rs /home/lowlife/rust-linked-list/src/first.rs /home/lowlife/rust-linked-list/src/fourth.rs /home/lowlife/rust-linked-list/src/lib.rs /home/lowlife/rust-linked-list/src/second.rs /home/lowlife/rust-linked-list/src/third.rs
