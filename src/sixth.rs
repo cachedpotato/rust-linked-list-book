@@ -972,12 +972,3 @@ impl LinkedList<i32> {
         LinkedList::from_iter(res)
     }
 }
-
-impl<T: Eq> LinkedList<T> {
-    pub fn find_duplicate(list: &mut LinkedList<T>) -> usize {
-        let mcur = list.cursor_mut();
-        
-
-        0
-    }
-}
