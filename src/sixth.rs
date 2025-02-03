@@ -185,6 +185,15 @@ impl<T> LinkedList<T> {
     }
 
     //Cursor Creation
+    pub fn cursor(&self) -> Cursor<'_, T> {
+        Cursor {
+            cur: None,
+            list: self,
+            index: None
+        }
+    }
+
+
     pub fn cursor_mut(&mut self) -> CursorMut<'_, T> {
         CursorMut {
             list: self,
@@ -529,6 +538,98 @@ unsafe impl<'a, T: Sync> Sync for IterMut<'a, T> {}
 // cursors have "ghost" elements that contains None to indicate
 // the start and end of the list.
 // We can "walk over" this ghost elements to wrap over to the other side
+
+//IMMUTABLE CURSOR
+pub struct Cursor<'a, T> {
+    cur: Link<T>,
+    list: &'a LinkedList<T>,
+    index: Option<usize>,
+}
+
+impl<'a, T> Cursor<'a, T> {
+    pub fn index(&self) -> Option<usize> {
+        self.index
+    }
+
+    pub fn move_next(&mut self) {
+        unsafe {
+            if let Some(pos) = self.cur {
+                //the cursor is on a real element
+                self.cur = (*pos.as_ptr()).back;
+
+                if self.cur.is_some() {
+                    *self.index.as_mut().unwrap() += 1;
+                } else {
+                    //walked into ghost
+                    self.index = None;
+                }
+            } else if !self.list.is_empty() {
+                //we're at ghost element
+                self.cur = self.list.front;
+                self.index = Some(0);
+            } else {
+                //empty list
+                //nothing to do
+            }
+        }
+    }
+
+    pub fn move_prev(&mut self) {
+        if let Some(pos) = self.cur {
+            unsafe {
+                //move back
+                self.cur = (*pos.as_ptr()).front;
+
+                if self.cur.is_some() {
+                    //real node
+                    *self.index.as_mut().unwrap() -= 1;
+                } else {
+                    //we at ghost node
+                    self.index = None
+                }
+            }
+        } else if !self.list.is_empty() {
+            //cursor at ghost node (front)
+            //wrap back to end of list
+            self.cur = self.list.back;
+            self.index = Some(self.list.len - 1);
+        } else {
+            //empty list
+            //no nothing
+        }
+    }
+
+    pub fn current(&self) -> Option<&T> {
+        self.cur.map(|current| unsafe {
+            &(*current.as_ptr()).elem
+        })
+    }
+
+    pub fn peek_next(&self) -> Option<&T> {
+        unsafe {
+            let next = if let Some(cur) = self.cur {
+                (*cur.as_ptr()).back
+            } else {
+                self.list.front
+            };
+            next.map(|node| &(*node.as_ptr()).elem)
+        }
+    }
+
+    pub fn peek_prev(&self) -> Option<&T> {
+        unsafe {
+            let prev = if let Some(cur) = self.cur {
+                (*cur.as_ptr()).front
+            } else {
+                self.list.back
+            };
+            prev.map(|node| &(*node.as_ptr()).elem)
+        }
+    }
+}
+
+
+//MUTABLE CURSOR
 pub struct CursorMut<'a, T> {
     cur: Link<T>,
     list: &'a mut LinkedList<T>,
@@ -618,6 +719,24 @@ impl<'a, T> CursorMut<'a, T> {
                 self.list.back
             };
             prev.map(|node| &mut (*node.as_ptr()).elem)
+        }
+    }
+
+    pub fn move_to_front(&mut self) {
+        if self.cur.is_none() {
+
+        } else {
+            self.cur = self.list.front;
+            self.index = Some(0);
+        }
+    }
+
+    pub fn move_to_back(&mut self) {
+        if self.cur.is_none() {
+
+        } else {
+            self.cur = self.list.back;
+            self.index = Some(self.list.len - 1);
         }
     }
 
