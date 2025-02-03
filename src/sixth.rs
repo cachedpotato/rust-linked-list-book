@@ -743,10 +743,12 @@ impl<'a, T> CursorMut<'a, T> {
     pub fn remove_current(&mut self) -> Option<T> {
         unsafe {
             if let Some(cur) = self.cur {
-                let prev = (*cur.as_ptr()).front.take();
-                let next = (*cur.as_ptr()).back.take();
+                //let prev = (*cur.as_ptr()).front.take();
+                //let next = (*cur.as_ptr()).back.take();
                 //get current node (dropped after function return)
                 let current= Box::from_raw(cur.as_ptr());
+                let prev = current.front;
+                let next = current.back;
                 let ret= current.elem;
 
                 if prev.is_none() && next.is_none() {
