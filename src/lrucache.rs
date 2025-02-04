@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::sixth::LinkedList;
 
 pub struct LRUCache<T> {
@@ -5,7 +7,7 @@ pub struct LRUCache<T> {
     cache: LinkedList<(usize, T)>,
 }
 
-impl<T: Clone> LRUCache<T> {
+impl<T> LRUCache<T> {
     pub fn len(&self) -> usize {
         self.cache.len()
     }
@@ -20,15 +22,16 @@ impl<T: Clone> LRUCache<T> {
     pub fn get(&mut self, key: usize) -> Option<&T> {
         let mut m = self.cache.cursor_mut();
         m.move_next();
-        while m.current().is_some() {
-            if m.current().unwrap().0 != key {m.move_next(); continue;}
-            let a = m.remove_current();
-            m.move_to_back();
-            m.splice_after(LinkedList::from_iter([a.unwrap()]));
+        while let Some((k, _v)) = m.current() {
+            if k != &key {m.move_next(); continue;}
 
-            return self.cache.back().map(|(_k, v)| v)
+            let a = m.remove_current(); //<- YOU FUCKING PIECE OF SHIT
+            self.cache.push_back(a.unwrap());
+            return self.cache.back()
+                .map(|(_k, v)| v);
         }
         None
+        //m.remove_current();
     }
 
     pub fn put(&mut self, new: (usize, T)) {
@@ -36,7 +39,13 @@ impl<T: Clone> LRUCache<T> {
             self.cache.pop_front();
         }
         self.cache.push_back(new);
-        self.capacity += 1;
+    }
+}
+
+impl<T> Drop for LRUCache<T> {
+    fn drop(&mut self) {
+        self.cache.clear();
+        self.capacity = 0;
     }
 }
 
@@ -50,9 +59,9 @@ mod test {
         lru.put((1, 10));
         assert_eq!(lru.len(), 1);
         assert_eq!(lru.get(1), Some(&10));
-        //lru.put((2, 20));
-        //lru.put((3, 30));
-        //assert_eq!(lru.get(2), Some(&20));
-        //assert_eq!(lru.get(1), None);
+        lru.put((2, 20));
+        lru.put((3, 30));
+        assert_eq!(lru.get(2), Some(&20));
+        assert_eq!(lru.get(1), None);
     }
 }

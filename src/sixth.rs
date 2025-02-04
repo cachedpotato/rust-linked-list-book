@@ -740,41 +740,55 @@ impl<'a, T> CursorMut<'a, T> {
         }
     }
 
+    //holy shit there's a lot of edge cases I need to consider
+    //TODO: Clean this mess
     pub fn remove_current(&mut self) -> Option<T> {
         unsafe {
-            if let Some(cur) = self.cur {
-                //let prev = (*cur.as_ptr()).front.take();
-                //let next = (*cur.as_ptr()).back.take();
-                //get current node (dropped after function return)
-                let current= Box::from_raw(cur.as_ptr());
-                let prev = current.front;
-                let next = current.back;
-                let ret= current.elem;
-
-                if prev.is_none() && next.is_none() {
-                    //list is of length one
-                    self.list.clear();
-                } else {
-                    if prev.is_none() {
-                        //prev is ghost node (front)
-                        (*next.unwrap().as_ptr()).front = None;
-                        self.list.front = next;
-                    } else if next.is_none() {
-                        //next is ghost node (back)
-                        (*prev.unwrap().as_ptr()).back = None;
-                        self.list.back = prev;
-                    } else {
-                        //general case
-                        (*prev.unwrap().as_ptr()).back = next;
-                        (*next.unwrap().as_ptr()).front = prev;
-                    }
-                    self.list.len -= 1;
-                    self.cur = next;
-                }
-                Some(ret)
-            } else {
-                //at ghost node or empty list
+            //not really clean but I'm just gonna use what works
+            if self.list.is_empty() {
                 None
+            } else if self.list.len == 1 {
+                self.cur = None;
+                self.index = None;
+                self.list.pop_front()
+            } else if self.cur == self.list.front {
+                //at front
+                //move cursor to back
+                self.cur = (*self.list.front.unwrap().as_ptr()).back;
+                self.list.pop_front()
+
+            } else if self.cur == self.list.back {
+                //at back
+                self.cur = None; //ghost node
+                self.index = None;
+                self.list.pop_back()
+            } else {
+                self.cur
+                    .map(|node| {
+                        //general case
+                        //get hold of current
+                        let current = Box::from_raw(node.as_ptr());
+                        let prev = current.front.unwrap();
+                        let next = current.back.unwrap();
+
+                        //rewire
+                        (*prev.as_ptr()).back = Some(next);
+                        (*next.as_ptr()).front = Some(prev);
+
+                        //update list and cursor
+                        //index does not change
+                        // 0 1 2 3 4 5
+                        //     ^HERE (idx = 2)
+                        // 0 1 3 4 5
+                        //     ^HERE (idx = 2)
+                        self.cur = Some(next);
+                        self.list.len -= 1;
+                        current.elem
+                    })
+                    .or_else(|| {
+                        //empty list or ghost node
+                        None
+                    })
             }
         }
     }
