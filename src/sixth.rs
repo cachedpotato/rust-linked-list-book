@@ -1124,11 +1124,11 @@ impl<T: Debug> LinkedList<T> {
         for _i in 0.. l / k {
             let mut new = LinkedList::new();
             for _j in 0..k {
-                println!("{:?}", m.current());
+                //println!("{:?}", m.current());
                 new.push_front(m.remove_current().unwrap());
             }
             out.extend(new.into_iter());
-            println!("{:?}", out);
+            //println!("{:?}", out);
         }
         //append reversed list to the front
         m.splice_before(out);
