@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use crate::sixth::LinkedList;
 
 pub struct LRUCache<T> {
@@ -31,7 +29,6 @@ impl<T> LRUCache<T> {
                 .map(|(_k, v)| v);
         }
         None
-        //m.remove_current();
     }
 
     pub fn put(&mut self, new: (usize, T)) {

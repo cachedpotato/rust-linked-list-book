@@ -1107,3 +1107,29 @@ impl LinkedList<i32> {
         LinkedList::from_iter(res)
     }
 }
+
+impl<T: PartialEq + PartialOrd> LinkedList<T> {
+    pub fn merge_k_lists(lists: Vec<LinkedList<T>>) -> LinkedList<T> {
+        lists.into_iter()
+            .fold(LinkedList::new(), |acc, l| LinkedList::merge_two_lists(acc, l))
+    }
+}
+
+impl<T> LinkedList<T> {
+    pub fn reverse_k_group(&mut self, k: usize) {
+        let mut out = LinkedList::new();
+        let l = self.len;
+        let mut m = self.cursor_mut();
+        m.move_next();
+        for _i in 0.. l / k {
+            let mut new = LinkedList::new();
+            for _j in 0..k {
+                new.push_front(m.remove_current().unwrap());
+                m.move_next();
+            }
+            out.extend(new.into_iter());
+        }
+        //append reversed list to the front
+        m.splice_before(out);
+    }
+}
