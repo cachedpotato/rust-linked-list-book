@@ -1115,7 +1115,7 @@ impl<T: PartialEq + PartialOrd> LinkedList<T> {
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T: Debug> LinkedList<T> {
     pub fn reverse_k_group(&mut self, k: usize) {
         let mut out = LinkedList::new();
         let l = self.len;
@@ -1124,10 +1124,11 @@ impl<T> LinkedList<T> {
         for _i in 0.. l / k {
             let mut new = LinkedList::new();
             for _j in 0..k {
+                println!("{:?}", m.current());
                 new.push_front(m.remove_current().unwrap());
-                m.move_next();
             }
             out.extend(new.into_iter());
+            println!("{:?}", out);
         }
         //append reversed list to the front
         m.splice_before(out);
